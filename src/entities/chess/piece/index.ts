@@ -5,6 +5,7 @@ import { TGenericPieceColor, PieceType } from "../../../models";
 
 import PieceMovement, { PieceMovementOptions } from "../../../services/pieceMovement/pieceMovement";
 import Position from "../../2d/position";
+import GameRules from "../rules";
 
 export interface PieceCharacteristics {
   id: string,
@@ -15,7 +16,8 @@ export interface PieceCharacteristics {
 export default class Piece extends Observable implements PieceCharacteristics {
   constructor(
     readonly characteristics: PieceCharacteristics,
-    readonly board: Board
+    readonly board: Board,
+    readonly rules: GameRules,
   ) {
     super();
 
@@ -23,7 +25,7 @@ export default class Piece extends Observable implements PieceCharacteristics {
     this.type = characteristics.type;
     this.color = characteristics.color;
 
-    this.movements = new PieceMovement(this, board);
+    this.movements = new PieceMovement(this, board, rules);
   }
 
   private readonly movements: PieceMovement;
@@ -34,8 +36,22 @@ export default class Piece extends Observable implements PieceCharacteristics {
 
   moveCount: number = 0;
 
+  metadataForSpecialMovements?: Partial<{
+    pawnDoubleAdvanceOnLastMove: boolean;
+  }>;
+
   getCurrentPossibleMovements(options: PieceMovementOptions) {
     return this.movements.updateFieldOfView(options);
+  }
+
+  onPieceMoved(from: Position, to: Position) {
+    this.moveCount++;
+
+    if (this.type === PieceType.pawn) {
+      this.metadataForSpecialMovements = {
+        pawnDoubleAdvanceOnLastMove: this.moveCount === 1 && from.measureDistanceTo(to) === 2,
+      }
+    }
   }
 
   get currentPosition(): Position | undefined {
@@ -43,6 +59,6 @@ export default class Piece extends Observable implements PieceCharacteristics {
   }
 
   get allPossibleMovements(): Position[] {
-    return this.movements.updateFieldOfView({ preview: true });
+    return this.getCurrentPossibleMovements({ preview: true });
   }
 }

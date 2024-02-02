@@ -13,16 +13,18 @@ import defaultPieceArrange from './constants/pieceMaps/default';
 
 import { GameNetwork } from './models';
 
+const rules = new CaptureTheKingGameRules();
+
 const board = new Board(
   mainBoardId,
-  defaultPieceArrange
+  defaultPieceArrange(rules),
 );
 
 const user1 = new Guest(Math.random().toString(), { name: 'Player 1' });
 const user2 = new Guest(Math.random().toString(), { name: 'Player 2' });
 
 const match = new Match(
-  new CaptureTheKingGameRules(),
+  rules,
   GameNetwork.local,
   board,
   [user1, user2]
@@ -33,7 +35,9 @@ const matchController = new MatchControllersAdapter(match);
 function App() {
   return (
     <div className="App">
-      <h1>Chess but you actually have to capture the king</h1>
+      <h1 style={{ marginBottom: 40 }}>
+        Chess but you actually have to capture the king
+      </h1>
       <Chessboard matchController={matchController} />
     </div>
   )

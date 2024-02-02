@@ -36,6 +36,10 @@ const Cells = ({ matchController, chessBoardController, row }: InnerProps & { ro
             onClick={(e) => onSquareClick(e)}
           >
             {pieceController && <Piece PieceController={pieceController} />}
+            <p style={{ position: 'absolute', top: 0, left: 0, fontSize: '0.5rem', color: 'black' }}>
+              x: {row}
+              y: {index}
+            </p>
           </TableCell>
         );
       })

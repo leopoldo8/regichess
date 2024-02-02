@@ -19,6 +19,11 @@ type movePieceVerificationProps = {
   to: Position
 }
 
+type verifySpecialMovementWithGameRuleProps = {
+  piece: Piece,
+  to: Position
+}
+
 export default class Match extends Observable {
   constructor(
     readonly gameRules: GameRules,
@@ -70,8 +75,13 @@ export default class Match extends Observable {
   }
 
   private turnAction(piece: Piece, to: Position) {
-    this.board.movePieceAndReplace(piece, to);
-    piece.moveCount++;
+    const from = piece.currentPosition!;
+
+    if (!this.verifySpecialMovementWithGameRule({ piece, to })) {
+      this.board.movePieceAndReplace(piece, to);
+    }
+
+    piece.onPieceMoved(from, to);
 
     this.passToNextTurn();
   }
@@ -111,5 +121,9 @@ export default class Match extends Observable {
 
   private movePieceRulesVerification({ piece, to }: movePieceVerificationProps) {
     return this.gameRules.canMovePiece({ board: this.board, piece, to });
+  }
+
+  private verifySpecialMovementWithGameRule({ piece, to }: verifySpecialMovementWithGameRuleProps) {
+    return this.gameRules.verifySpecialMovementAndMovePiecesIfNecessary({ board: this.board, piece, to });
   }
 }

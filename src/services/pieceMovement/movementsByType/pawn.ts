@@ -1,5 +1,5 @@
 import PiecesMovement from "../../pieceMovement/boardRelative";
-import { PieceMovementProps, PieceMovementSegments } from "../pieceMovement";
+import { PieceMovementProps, PieceMovementSegments, PositionWithProps, SpecialPieceMovements } from "../pieceMovement";
 
 export const PawnMovement = (props: PieceMovementProps): PieceMovementSegments => {
   const boardRelative = new PiecesMovement(props.position, props.color);
@@ -9,6 +9,23 @@ export const PawnMovement = (props: PieceMovementProps): PieceMovementSegments =
     topLeft: [],
     topRight: []
   };
+  
+  /**
+   * En passant logic
+   */
+  if (props.pawnDoubleAdvanceFromLeft) {
+    const position: PositionWithProps = boardRelative.Diagonal('left', 'top')(1);
+    position.specialMovementType = SpecialPieceMovements.enPassant;
+    
+    movement.topLeft?.push(position);
+  }
+
+  if (props.pawnDoubleAdvanceFromRight) {
+    const position: PositionWithProps = boardRelative.Diagonal('right', 'top')(1);
+    position.specialMovementType = SpecialPieceMovements.enPassant;
+
+    movement.topRight?.push(position);
+  }
 
   if (props.isTakingAPiece) {
     movement.topLeft?.push(boardRelative.Diagonal('left', 'top')(1));

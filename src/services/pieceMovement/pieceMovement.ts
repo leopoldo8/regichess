@@ -10,9 +10,18 @@ import { KingMovement } from "./movementsByType/king";
 import Position from "../../entities/2d/position";
 import Piece from "../../entities/chess/piece";
 import Board from "../../entities/chess/board";
+import GameRules from "../../entities/chess/rules";
 import { TGenericPieceColor, PieceType } from "../../models";
 
-export type PieceSingleMovement = Position[];
+export enum SpecialPieceMovements {
+  enPassant = 'enPassant',
+  leftCastling = 'left-castling',
+  rightCastling = 'right-castling'
+}
+
+export type PositionWithProps = Position & { specialMovementType?: SpecialPieceMovements };
+
+export type PieceSingleMovement = PositionWithProps[];
 
 export type PieceMovementSegmentsKey = 'topLeft' | 'topRight' | 'bottomLeft' | 'bottomRight' | 'top' | 'bottom' | 'right' | 'left' | 'outOfFieldOfView';
 
@@ -33,6 +42,10 @@ export interface PieceMovementSegments extends GenericPieceMovementSegments {
 export type PieceMovementOptions = {
   isTakingAPiece?: boolean;
   preview?: boolean;
+  leftRookMoved?: boolean;
+  rightRookMoved?: boolean;
+  pawnDoubleAdvanceFromRight?: boolean;
+  pawnDoubleAdvanceFromLeft?: boolean;
 }
 
 export type PieceMovementProps = PieceMovementOptions & {
@@ -47,6 +60,7 @@ class PieceMovement {
   constructor(
     readonly piece: Piece,
     readonly board: Board,
+    readonly rules: GameRules
   ) {
     this.fieldOfView = new PieceFieldOfView(this.piece, this.board);
   }
@@ -64,6 +78,7 @@ class PieceMovement {
 
   getPossibleMovementsByPieceType(options: PieceMovementOptions): PieceSingleMovement {
     this.fieldOfView = new PieceFieldOfView(this.piece, this.board);
+
     const movement = this.getSegmentsByType(options);
 
     const resultantMovements = Object.keys(movement).map(key => {
@@ -76,17 +91,22 @@ class PieceMovement {
     return this.flattenPieceMovement(resultantMovements);
   }
 
-  updateFieldOfView(options: PieceMovementOptions) {
-    return this.getPossibleMovementsByPieceType(options);
+  updateFieldOfView(paramsOptions: PieceMovementOptions) {
+    const { options } = this.rules.getPieceMovementOptions({
+      board: this.board,
+      piece: this.piece,
+      preview: paramsOptions.preview
+    });
+
+    return this.getPossibleMovementsByPieceType({ ...options, ...paramsOptions });
   }
 
   private getSegmentsByType(options: PieceMovementOptions) {
     const props: PieceMovementProps = {
-      preview: options.preview,
-      isTakingAPiece: options.isTakingAPiece,
+      ...options,
       moveCount: this.piece.moveCount,
       color: this.piece.color,
-      position: this.piece.currentPosition as Position
+      position: this.piece.currentPosition as Position,
     }
 
     return this.movements[this.piece.type](props);
