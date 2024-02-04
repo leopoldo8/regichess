@@ -62,7 +62,7 @@ export default class Match extends Observable {
     ];
 
     if (verifications.every(verification => verification.bind(this)({ player, piece, to }))) {
-      this.turnAction(piece, to);
+      this.turnAction(player, piece, to);
     }
   }
 
@@ -74,22 +74,22 @@ export default class Match extends Observable {
     return this.players.find(player => player.color === color);
   }
 
-  private async turnAction(piece: Piece, to: Position) {
+  private async turnAction(player: Player, piece: Piece, to: Position) {
     const movementsToRun = await this.gameRules.turnAction({
       board: this.board,
       piece,
       to,
     });
 
-    /**
-     * Verify if stills the same turn after the promise
-     */
-    if (movementsToRun[0]?.piece.color !== this.turnColor) {
-      return;
-    }
-
-
     movementsToRun.forEach(movement => {
+      /**
+       * Verify if stills the same turn after the promise
+       */
+      if (!this.movePieceTurnVerification({ player, piece, to })) return;
+
+      /**
+       * TODO: add better security verifications (eg. only one piece moved per turn)
+       */
       switch(movement.type) {
         case 'move':
           movement.piece.onPieceMoved(movement.piece.currentPosition!, movement.to!);
