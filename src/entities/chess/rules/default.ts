@@ -13,9 +13,11 @@ import Observer from "../../../utils/observer";
 import { specialMovementsActions } from "../../../services/pieceMovement/specialMovements";
 
 export default class CaptureTheKingGameRules extends Observable implements GameRules {
-  commonRulesUIAdapter = new CommonRulesUIAdapter();
-
   firstTurnPlayerColor = DefaultPieceColors.white;
+
+  private commonRulesUIAdapter = new CommonRulesUIAdapter();
+
+  private tempPromotionObserver: ReturnType<Observable['register']> | undefined;
 
   getPlayersColors(seed: number) {
     const int = getRandomIntegerWithSeed(seed);
@@ -52,6 +54,8 @@ export default class CaptureTheKingGameRules extends Observable implements GameR
   }
 
   async turnAction({ piece, to, board }: canMovePieceProps) {
+    this.commonRulesUIAdapter.cancelPromotionSelectionDialog();
+
     const {
       options,
       leftRook,
@@ -102,20 +106,25 @@ export default class CaptureTheKingGameRules extends Observable implements GameR
 
     if (piece.type === PieceType.pawn) {
       const adjacentLeftPawn = board.getPieceByPosition(new BoardRelative(piece.currentPosition!, piece.color).Left(1));
+
+      if (adjacentLeftPawn && adjacentLeftPawn.metadataForSpecialMovements?.pawnDoubleAdvanceOnLastMove) {
+        options.pawnDoubleAdvanceFromLeft = adjacentLeftPawn.metadataForSpecialMovements?.pawnDoubleAdvanceOnLastMove;
+
+        return {
+          options,
+          adjacentLeftPawn,
+        }
+      }
+
       const adjacentRightPawn = board.getPieceByPosition(new BoardRelative(piece.currentPosition!, piece.color).Right(1));
 
-      if (adjacentLeftPawn) {
-        options.pawnDoubleAdvanceFromLeft = adjacentLeftPawn.metadataForSpecialMovements?.pawnDoubleAdvanceOnLastMove;
-      }
-
-      if (adjacentRightPawn) {
+      if (adjacentRightPawn && adjacentRightPawn.metadataForSpecialMovements?.pawnDoubleAdvanceOnLastMove) {
         options.pawnDoubleAdvanceFromRight = adjacentRightPawn.metadataForSpecialMovements?.pawnDoubleAdvanceOnLastMove;
-      }
 
-      return {
-        options,
-        adjacentLeftPawn,
-        adjacentRightPawn,
+        return {
+          options,
+          adjacentRightPawn,
+        }
       }
     }
     
@@ -126,7 +135,9 @@ export default class CaptureTheKingGameRules extends Observable implements GameR
 
   private waitForPlayerDecisionToPromotePawn({ board, piece, to }: canMovePieceProps): Promise<MovementsStructuredArray> {
     return new Promise((resolve) => {
-      this.commonRulesUIAdapter.register(new Observer<PromotionSelectedEvent>('promotionSelected', (result) => {
+      this.tempPromotionObserver = this.commonRulesUIAdapter.register(new Observer<PromotionSelectedEvent>('promotionSelected', (result) => {
+        this.tempPromotionObserver?.remove();
+
         if (result.type) {
           resolve([
             {

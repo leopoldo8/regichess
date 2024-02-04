@@ -36,7 +36,6 @@ export type verifyGameOverProps = {
 }
 
 export default abstract class GameRules extends Observable {
-  abstract commonRulesUIAdapter: CommonRulesUIAdapter;
   abstract firstTurnPlayerColor: TGenericPieceColor;
   abstract getPlayersColors: (seed: number) => TGenericPieceColor[];
   abstract canMovePiece: (props: canMovePieceProps) => boolean;

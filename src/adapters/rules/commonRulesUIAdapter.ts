@@ -29,6 +29,10 @@ class CommonRulesUIAdapter extends Observable {
     }));
   }
 
+  cancelPromotionSelectionDialog() {
+    document.getElementById('promotion-selection')?.remove();
+  }
+
   onSelectionResult(type?: PieceType) {
     document.getElementById('promotion-selection')?.remove();
 

@@ -1,4 +1,4 @@
-import Observable from "../../../utils/observable";
+import Observable, { globalObservable } from "../../../utils/observable";
 
 import { GameNetwork, TGenericPieceColor } from "../../../models";
 import GameRules from "../rules";
@@ -81,6 +81,14 @@ export default class Match extends Observable {
       to,
     });
 
+    /**
+     * Verify if stills the same turn after the promise
+     */
+    if (movementsToRun[0]?.piece.color !== this.turnColor) {
+      return;
+    }
+
+
     movementsToRun.forEach(movement => {
       switch(movement.type) {
         case 'move':
@@ -114,6 +122,8 @@ export default class Match extends Observable {
 
     this.turnColor = this.gameRules.getNextTurnColor(this.turnColor);
     this.turnCount++;
+
+    globalObservable.globalNotify('onEachTurn');
   }
 
   private endMatch(winner: Player) {

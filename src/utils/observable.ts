@@ -25,3 +25,11 @@ export default class Observable {
 		}
 	}
 }
+
+class GlobalObservable extends Observable {
+  public globalNotify<T = any>(event: string, params?: T) {
+    return this.notify<T | undefined>(event, params);
+  }
+}
+
+export const globalObservable = new GlobalObservable();

@@ -1,11 +1,12 @@
 import Board from "../board";
 
-import Observable from "../../../utils/observable";
+import Observable, { globalObservable } from "../../../utils/observable";
 import { TGenericPieceColor, PieceType } from "../../../models";
 
 import PieceMovement, { PieceMovementOptions } from "../../../services/pieceMovement/pieceMovement";
 import Position from "../../2d/position";
 import GameRules from "../rules";
+import Observer from "../../../utils/observer";
 
 export interface PieceCharacteristics {
   id: string,
@@ -30,6 +31,8 @@ export default class Piece extends Observable implements PieceCharacteristics {
 
   private readonly movements: PieceMovement;
 
+  private tempGlobalObserver: ReturnType<Observable['register']> | undefined;
+
   id;
   type;
   color;
@@ -48,8 +51,18 @@ export default class Piece extends Observable implements PieceCharacteristics {
     this.moveCount++;
 
     if (this.type === PieceType.pawn) {
+      const pawnDoubleAdvanceOnLastMove = this.moveCount === 1 && from.measureDistanceTo(to) === 2;
+
       this.metadataForSpecialMovements = {
-        pawnDoubleAdvanceOnLastMove: this.moveCount === 1 && from.measureDistanceTo(to) === 2,
+        pawnDoubleAdvanceOnLastMove,
+      }
+
+      if (pawnDoubleAdvanceOnLastMove) {
+        setTimeout(() => {
+          this.tempGlobalObserver = globalObservable.register(new Observer('onEachTurn', () => {
+            this.metadataForSpecialMovements = undefined;
+          }));
+        })
       }
     }
   }
