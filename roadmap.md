@@ -2,7 +2,7 @@ Next steps to finish the demo:
 
 ~~* Castle~~
 ~~* En passant~~
-* Promote pawn
+~~* Promote pawn~~
 * Restart game
 * Count wins
 * Choose players names

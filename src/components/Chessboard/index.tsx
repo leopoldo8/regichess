@@ -92,17 +92,18 @@ const Chessboard = ({ matchController }: Props) => {
 
   return (
     <div>
-      <div style={{ position: 'relative' }}>
+      <div id="main-board" style={{ position: 'relative' }}>
         <div className="gameover-overlay">
           <GameoverOverlay
             isVisible={!!winner}
             winnerName={`${winner?.name} (${winner?.color})`}
           />
         </div>
-        <div key={renderKey}>
+        <div>
           <Table
             id={chessBoardController.boardId}
             className="chess-board"
+            key={renderKey}
           >
             <tbody>
               <Rows
@@ -112,6 +113,7 @@ const Chessboard = ({ matchController }: Props) => {
               <RenderColumnsNames />
             </tbody>
           </Table>
+          <div className="general-overlay"></div>
         </div>
       </div>
       <p><span style={{ textTransform: 'uppercase' }}>{PlayerColor}</span> ({PlayerName}) to move</p>

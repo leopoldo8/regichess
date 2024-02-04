@@ -12,12 +12,7 @@ import Piece from "../../entities/chess/piece";
 import Board from "../../entities/chess/board";
 import GameRules from "../../entities/chess/rules";
 import { TGenericPieceColor, PieceType } from "../../models";
-
-export enum SpecialPieceMovements {
-  enPassant = 'enPassant',
-  leftCastling = 'left-castling',
-  rightCastling = 'right-castling'
-}
+import { SpecialPieceMovements } from "./specialMovements";
 
 export type PositionWithProps = Position & { specialMovementType?: SpecialPieceMovements };
 
@@ -26,6 +21,13 @@ export type PieceSingleMovement = PositionWithProps[];
 export type PieceMovementSegmentsKey = 'topLeft' | 'topRight' | 'bottomLeft' | 'bottomRight' | 'top' | 'bottom' | 'right' | 'left' | 'outOfFieldOfView';
 
 export type GenericPieceMovementSegments = Partial<{ [key: string]: PieceSingleMovement }>;
+
+export type MovementsStructuredArray = {
+  type: 'move' | 'remove' | 'transform';
+  piece: Piece;
+  transformType?: PieceType;
+  to?: Position;
+}[]
 
 export interface PieceMovementSegments extends GenericPieceMovementSegments {
   topLeft?: PieceSingleMovement;

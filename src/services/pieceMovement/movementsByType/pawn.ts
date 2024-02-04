@@ -1,5 +1,6 @@
 import PiecesMovement from "../../pieceMovement/boardRelative";
-import { PieceMovementProps, PieceMovementSegments, PositionWithProps, SpecialPieceMovements } from "../pieceMovement";
+import { PieceMovementProps, PieceMovementSegments, PositionWithProps } from "../pieceMovement";
+import { SpecialPieceMovements } from "../specialMovements";
 
 export const PawnMovement = (props: PieceMovementProps): PieceMovementSegments => {
   const boardRelative = new PiecesMovement(props.position, props.color);
@@ -9,7 +10,7 @@ export const PawnMovement = (props: PieceMovementProps): PieceMovementSegments =
     topLeft: [],
     topRight: []
   };
-  
+
   /**
    * En passant logic
    */

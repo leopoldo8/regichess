@@ -55,6 +55,16 @@ class BoardRelative {
     return Array.from<unknown[], Position>(Array(count), (v, i) => movement.bind(this, i)());
   }
 
+  isEighthRank(overrideCoords?: Position) {
+    const { x } = overrideCoords || this.coords;
+
+    if (this.color === DefaultPieceColors.black) {
+      return x === 7;
+    }
+
+    return x === 0;
+  }
+
   private getRelativeAmountByColor(amount: number) {
     if (this.color === DefaultPieceColors.black) {
       return -amount;

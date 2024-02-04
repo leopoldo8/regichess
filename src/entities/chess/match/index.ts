@@ -74,14 +74,29 @@ export default class Match extends Observable {
     return this.players.find(player => player.color === color);
   }
 
-  private turnAction(piece: Piece, to: Position) {
-    const from = piece.currentPosition!;
+  private async turnAction(piece: Piece, to: Position) {
+    const movementsToRun = await this.gameRules.turnAction({
+      board: this.board,
+      piece,
+      to,
+    });
 
-    if (!this.verifySpecialMovementWithGameRule({ piece, to })) {
-      this.board.movePieceAndReplace(piece, to);
-    }
+    movementsToRun.forEach(movement => {
+      switch(movement.type) {
+        case 'move':
+          movement.piece.onPieceMoved(movement.piece.currentPosition!, movement.to!);
+          this.board.movePieceAndReplace(movement.piece, movement.to!);
+          break;
+        
+        case 'remove':
+          this.board.removePiece(movement.piece);
+          break;
 
-    piece.onPieceMoved(from, to);
+        case 'transform':
+          movement.piece.transformType(movement.transformType!);
+          break;
+      }
+    });
 
     this.passToNextTurn();
   }
@@ -121,9 +136,5 @@ export default class Match extends Observable {
 
   private movePieceRulesVerification({ piece, to }: movePieceVerificationProps) {
     return this.gameRules.canMovePiece({ board: this.board, piece, to });
-  }
-
-  private verifySpecialMovementWithGameRule({ piece, to }: verifySpecialMovementWithGameRuleProps) {
-    return this.gameRules.verifySpecialMovementAndMovePiecesIfNecessary({ board: this.board, piece, to });
   }
 }

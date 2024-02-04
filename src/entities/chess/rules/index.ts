@@ -5,7 +5,8 @@ import Position from "../../2d/position";
 
 import Observable from "../../../utils/observable";
 import { TGenericPieceColor } from "../../../models";
-import { PieceMovementOptions } from "../../../services/pieceMovement/pieceMovement";
+import { MovementsStructuredArray, PieceMovementOptions } from "../../../services/pieceMovement/pieceMovement";
+import CommonRulesUIAdapter from "../../../adapters/rules/commonRulesUIAdapter";
 
 export type getPieceMovementOptionsProps = {
   piece: Piece,
@@ -35,11 +36,12 @@ export type verifyGameOverProps = {
 }
 
 export default abstract class GameRules extends Observable {
+  abstract commonRulesUIAdapter: CommonRulesUIAdapter;
   abstract firstTurnPlayerColor: TGenericPieceColor;
   abstract getPlayersColors: (seed: number) => TGenericPieceColor[];
   abstract canMovePiece: (props: canMovePieceProps) => boolean;
   abstract getNextTurnColor: (actualTurn: TGenericPieceColor) => TGenericPieceColor;
   abstract verifyIfGameOverAndReturnWinner: (props: verifyGameOverProps) => Player | undefined;
-  abstract verifySpecialMovementAndMovePiecesIfNecessary: (props: canMovePieceProps) => boolean;
+  abstract turnAction: (props: canMovePieceProps) => Promise<MovementsStructuredArray>;
   abstract getPieceMovementOptions: (props: getPieceMovementOptionsProps) => getPieceMovementOptionsResult;
 }

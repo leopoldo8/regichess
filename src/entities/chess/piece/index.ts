@@ -54,6 +54,10 @@ export default class Piece extends Observable implements PieceCharacteristics {
     }
   }
 
+  transformType(newType: PieceType) {
+    this.type = newType;
+  }
+
   get currentPosition(): Position | undefined {
     return this.board.getPositionByPieceId(this.id);
   }

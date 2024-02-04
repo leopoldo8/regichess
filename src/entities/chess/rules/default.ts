@@ -2,14 +2,19 @@ import GameRules, { canMovePieceProps, getPieceMovementOptionsProps, getPieceMov
 
 import { DefaultPieceColors, PieceType, TGenericPieceColor } from "../../../models";
 
-import { PieceMovementOptions, SpecialPieceMovements } from "../../../services/pieceMovement/pieceMovement";
+import { MovementsStructuredArray, PieceMovementOptions } from "../../../services/pieceMovement/pieceMovement";
 import BoardRelative from "../../../services/pieceMovement/boardRelative";
 
 import Observable from "../../../utils/observable";
 import TogglePieceColor from "../../../utils/togglePieceColor";
 import { getRandomIntegerWithSeed } from "../../../utils/randomWithSeed";
+import CommonRulesUIAdapter, { PromotionSelectedEvent } from "../../../adapters/rules/commonRulesUIAdapter";
+import Observer from "../../../utils/observer";
+import { specialMovementsActions } from "../../../services/pieceMovement/specialMovements";
 
 export default class CaptureTheKingGameRules extends Observable implements GameRules {
+  commonRulesUIAdapter = new CommonRulesUIAdapter();
+
   firstTurnPlayerColor = DefaultPieceColors.white;
 
   getPlayersColors(seed: number) {
@@ -46,8 +51,7 @@ export default class CaptureTheKingGameRules extends Observable implements GameR
     }
   }
 
-  // FIXME: refactor to not redo operations
-  verifySpecialMovementAndMovePiecesIfNecessary({ board, piece, to }: canMovePieceProps) {
+  async turnAction({ piece, to, board }: canMovePieceProps) {
     const {
       options,
       leftRook,
@@ -58,42 +62,25 @@ export default class CaptureTheKingGameRules extends Observable implements GameR
 
     const movement = piece.getCurrentPossibleMovements(options).find(move => move.isEqualTo(to));
 
-    switch(movement?.specialMovementType) {
-      case SpecialPieceMovements.rightCastling:
-        if (rightRook) {
-          board.movePieceAndReplace(piece, to);
-          board.movePieceAndReplace(rightRook, new BoardRelative(to, piece.color).Left(1));
-          rightRook.moveCount++;
-          return true;
-        }
-
-      case SpecialPieceMovements.leftCastling:
-        if (leftRook) {
-          board.movePieceAndReplace(piece, to);
-          board.movePieceAndReplace(leftRook, new BoardRelative(to, piece.color).Right(1));
-          leftRook.moveCount++;
-          return true;
-        }
-
-      case SpecialPieceMovements.enPassant:
-        if (adjacentLeftPawn) {
-          board.movePieceAndReplace(piece, to);
-          board.removePiece(adjacentLeftPawn);
-          return true;
-        }
-
-        if (adjacentRightPawn) {
-          board.movePieceAndReplace(piece, to);
-          board.removePiece(adjacentRightPawn);
-          return true;
-        }
-
-      default:
-        return false;
+    if (piece.type === PieceType.pawn && new BoardRelative(to!, piece.color).isEighthRank()) {
+      return await this.waitForPlayerDecisionToPromotePawn({ board, piece, to });
     }
+
+    if (movement?.specialMovementType) {
+      return specialMovementsActions[movement.specialMovementType]({
+        piece,
+        to,
+        leftRook,
+        rightRook,
+        adjacentLeftPawn,
+        adjacentRightPawn,
+      });
+    }
+
+    return [{ type: 'move', piece, to }] as MovementsStructuredArray;
   }
 
-  getPieceMovementOptions({ board, piece, to, preview }: getPieceMovementOptionsProps): getPieceMovementOptionsResult {
+  getPieceMovementOptions({ board, piece, to }: getPieceMovementOptionsProps): getPieceMovementOptionsResult {
     const options: Partial<PieceMovementOptions> = {
       isTakingAPiece: to ? !board.getPieceByPosition(to) : false,
     }
@@ -101,15 +88,15 @@ export default class CaptureTheKingGameRules extends Observable implements GameR
     if (piece.type === PieceType.king) {
       const [leftRook, rightRook] = board.pieceMesh
         .findAll(fPiece => fPiece.type === PieceType.rook && fPiece.color === piece.color)
-        .sort((a, b) => (a.item.currentPosition?.y || 0) - (b.item.currentPosition?.y || 0));
+        .sort((a, b) => (a.item.currentPosition?.y || 0) - (b.item?.currentPosition?.y || 0));
 
-      options.leftRookMoved = leftRook.item.moveCount > 0;
-      options.rightRookMoved = rightRook.item.moveCount > 0;
+      options.leftRookMoved = leftRook?.item.moveCount > 0;
+      options.rightRookMoved = rightRook?.item.moveCount > 0;
 
       return {
         options,
-        leftRook: leftRook.item,
-        rightRook: rightRook.item,
+        leftRook: leftRook?.item,
+        rightRook: rightRook?.item,
       }
     }
 
@@ -135,6 +122,31 @@ export default class CaptureTheKingGameRules extends Observable implements GameR
     return {
       options,
     }
+  }
+
+  private waitForPlayerDecisionToPromotePawn({ board, piece, to }: canMovePieceProps): Promise<MovementsStructuredArray> {
+    return new Promise((resolve) => {
+      this.commonRulesUIAdapter.register(new Observer<PromotionSelectedEvent>('promotionSelected', (result) => {
+        if (result.type) {
+          resolve([
+            {
+              type: 'move',
+              piece,
+              to,
+            },
+            {
+              type: 'transform',
+              piece,
+              transformType: result.type,
+            }
+          ]);
+        }
+
+        resolve([]);
+      }));
+  
+      this.commonRulesUIAdapter.showPromoteSelectionDialog({ board, position: to, color: piece.color });
+    });
   }
 
   private canMovePiecePositionVerifications({ board, piece, to }: canMovePieceProps) {
