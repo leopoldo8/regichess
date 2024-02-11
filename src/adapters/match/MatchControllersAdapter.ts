@@ -7,6 +7,7 @@ import Observer from "../../utils/observer";
 import ChessBoardController from "../../controllers/chessboard";
 import PieceController from "../../controllers/piece";
 import { TGenericPieceColor } from "../../models";
+import GameMoveListController from "../../controllers/gameMoveList";
 
 export default class MatchControllersAdapter {
   constructor(
@@ -14,8 +15,12 @@ export default class MatchControllersAdapter {
   ) {
     this.chessboardController = new ChessBoardController(this.match);
 
+    this.gameMoveListController = new GameMoveListController(this.match);
+
     this.instantiatePlayerEvents();
   }
+
+  private readonly gameMoveListController: GameMoveListController;
 
   private readonly chessboardController: ChessBoardController;
 
@@ -54,6 +59,10 @@ export default class MatchControllersAdapter {
 
   instantiateChessBoardController() {
     return this.chessboardController;
+  }
+
+  instantiateGameMoveListController() {
+    return this.gameMoveListController;
   }
 
   getCurrentPlayerInfo(): { name?: string; color?: TGenericPieceColor; } {

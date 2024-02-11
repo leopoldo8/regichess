@@ -67,7 +67,7 @@ export default class CaptureTheKingGameRules extends Observable implements GameR
     const movement = piece.getCurrentPossibleMovements(options).find(move => move.isEqualTo(to));
 
     if (piece.type === PieceType.pawn && new BoardRelative(to!, piece.color).isEighthRank()) {
-      return await this.waitForPlayerDecisionToPromotePawn({ board, piece, to });
+      return await this.waitForPlayerDecisionToPromotePawn({ board, piece, to, options });
     }
 
     if (movement?.specialMovementType) {
@@ -81,12 +81,12 @@ export default class CaptureTheKingGameRules extends Observable implements GameR
       });
     }
 
-    return [{ type: 'move', piece, to }] as MovementsStructuredArray;
+    return [{ type: 'move', piece, to, isTakingPiece: options.isTakingAPiece }] as MovementsStructuredArray;
   }
 
   getPieceMovementOptions({ board, piece, to }: getPieceMovementOptionsProps): getPieceMovementOptionsResult {
     const options: Partial<PieceMovementOptions> = {
-      isTakingAPiece: to ? !board.getPieceByPosition(to) : false,
+      isTakingAPiece: to ? !!board.getPieceByPosition(to) : false,
     }
 
     if (piece.type === PieceType.king) {
@@ -133,7 +133,7 @@ export default class CaptureTheKingGameRules extends Observable implements GameR
     }
   }
 
-  private waitForPlayerDecisionToPromotePawn({ board, piece, to }: canMovePieceProps): Promise<MovementsStructuredArray> {
+  private waitForPlayerDecisionToPromotePawn({ board, piece, to, options }: canMovePieceProps & { options: getPieceMovementOptionsResult['options'] }): Promise<MovementsStructuredArray> {
     return new Promise((resolve) => {
       this.tempPromotionObserver = this.commonRulesUIAdapter.register(new Observer<PromotionSelectedEvent>('promotionSelected', (result) => {
         this.tempPromotionObserver?.remove();
@@ -144,6 +144,7 @@ export default class CaptureTheKingGameRules extends Observable implements GameR
               type: 'move',
               piece,
               to,
+              isTakingPiece: options.isTakingAPiece,
             },
             {
               type: 'transform',

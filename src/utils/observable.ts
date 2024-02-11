@@ -1,5 +1,9 @@
 import Observer from "./observer";
 
+export type Subscription = {
+  remove: () => void;
+}
+
 export default class Observable {
 	private readonly observers: Observer[];
 
@@ -7,7 +11,7 @@ export default class Observable {
 		this.observers = [];
 	}
 
-	public register(observer: Observer) {
+	public register(observer: Observer): Subscription {
 		const index = this.observers.push(observer);
 
     return {

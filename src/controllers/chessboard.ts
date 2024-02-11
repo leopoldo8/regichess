@@ -7,10 +7,14 @@ import Observer from "../utils/observer";
 
 import BoardUIAdapter from "../adapters/board/BoardUIAdapter";
 
-export default class ChessBoardController {
+import UIController from "./UIController";
+
+export default class ChessBoardController extends UIController {
   constructor(
     private readonly match: Match
   ) {
+    super();
+
     this.boardUIAdapter = new BoardUIAdapter(this.match.board);
 
     this.match.register(new Observer<MatchEndedEventProps>('matchEnded', this.showMatchWinner.bind(this)));

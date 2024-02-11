@@ -9,6 +9,7 @@ import Piece from "../Piece";
 
 import { Table, TableHeader, TableCell } from './style';
 import GameoverOverlay from "../GameoverOverlay";
+import useControllerHook from "../../utils/useControllerHook";
 
 type Props = { matchController: MatchControllersAdapter };
 type InnerProps = { matchController: MatchControllersAdapter; chessBoardController: ChessBoardController };
@@ -77,18 +78,7 @@ const Chessboard = ({ matchController }: Props) => {
   const { name: PlayerName, color: PlayerColor } = matchController.getCurrentPlayerInfo();
   const winner = chessBoardController.getMatchWinner();
 
-  const [renderKey, setRenderKey] = useState(0);
-
-  useEffect(() => {
-    const subscription = chessBoardController.registerObservable(() => {
-      setRenderKey(v => v + 1);
-    });
-
-    return () => {
-      subscription.boardSubscription.remove();
-      subscription.boardUISubscription.remove();
-    }
-  }, []);
+  const { renderKey } = useControllerHook(chessBoardController);
 
   return (
     <div>

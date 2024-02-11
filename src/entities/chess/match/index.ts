@@ -1,9 +1,10 @@
-import Observable, { globalObservable } from "../../../utils/observable";
 
-import { GameNetwork, TGenericPieceColor } from "../../../models";
 import GameRules from "../rules";
 import Board from "../board";
 
+import { MovementsStructuredArray } from "../../../services/pieceMovement/pieceMovement";
+import { GameNetwork, TGenericPieceColor } from "../../../models";
+import Observable, { globalObservable } from "../../../utils/observable";
 import Position from "../../2d/position";
 import Piece from "../piece";
 import Player from "../player";
@@ -49,6 +50,8 @@ export default class Match extends Observable {
 
   readonly seed: number;
   readonly players: Player[];
+
+  historicMovements: MovementsStructuredArray = [];
 
   turnColor: TGenericPieceColor;
   turnCount: number = 1;
@@ -104,6 +107,8 @@ export default class Match extends Observable {
           movement.piece.transformType(movement.transformType!);
           break;
       }
+
+      this.historicMovements.push(movement);
     });
 
     this.passToNextTurn();

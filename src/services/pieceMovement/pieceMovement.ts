@@ -27,6 +27,7 @@ export type MovementsStructuredArray = {
   piece: Piece;
   transformType?: PieceType;
   to?: Position;
+  isTakingPiece?: boolean;
 }[]
 
 export interface PieceMovementSegments extends GenericPieceMovementSegments {

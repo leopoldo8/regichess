@@ -1,5 +1,6 @@
 import './App.css';
 import Chessboard from './components/Chessboard';
+import GameMoveList from './components/GameMoveList';
 
 import CaptureTheKingGameRules from './entities/chess/rules/default';
 import Match from './entities/chess/match';
@@ -38,7 +39,10 @@ function App() {
       <h1 style={{ marginBottom: 40 }}>
         Chess but you actually have to capture the king
       </h1>
-      <Chessboard matchController={matchController} />
+      <div style={{ position: 'relative' }}>
+        <Chessboard matchController={matchController} />
+        <GameMoveList matchController={matchController} />
+      </div>
     </div>
   )
 }
